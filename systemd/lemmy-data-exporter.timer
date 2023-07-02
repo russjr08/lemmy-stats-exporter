@@ -1,0 +1,11 @@
+[Unit]
+Description=Automatically kickstarts lemmy-data-exporter on a recurring basis
+BindsTo=docker.service
+After=docker.service
+
+[Install]
+WantedBy=basic.target
+
+[Timer]
+OnCalendar=*:0/5
+Persistent=true

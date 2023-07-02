@@ -1,0 +1,9 @@
+[Unit]
+Description=Exports Lemmy database stats to InfluxDB
+After=docker.service
+BindsTo=docker.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/lemmy-data-exporter/config
+ExecStart=/usr/bin/lemmy-data-exporter

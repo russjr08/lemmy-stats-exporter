@@ -1,0 +1,7 @@
+PG_DB_HOST=127.0.0.1
+PG_DB_USER=metrics
+PG_DB_PASS=my_very_secure_password
+PG_DB_NAME=lemmy
+INFLUX_HOST=127.0.0.1
+INFLUX_PORT=8086
+INFLUX_NAME=lemmy_stats
