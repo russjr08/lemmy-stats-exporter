@@ -107,7 +107,7 @@ async fn collect_lemmy_stats(config: &Config) -> Result<LemmyStats, tokio_postgr
     }
 
     // Get total pending applications
-    match get_count_of_rows_for_table_with_condition(&client, "registration_application".to_string(), "admin_id = null".to_string()).await {
+    match get_count_of_rows_for_table_with_condition(&client, "registration_application".to_string(), "admin_id IS NULL".to_string()).await {
         Ok(total) => { stats.num_of_apps = total },
         Err(_) => { eprintln!("Unable to query registration_application pending total!"); }
     }
