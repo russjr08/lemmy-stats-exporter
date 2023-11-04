@@ -135,6 +135,12 @@ To start the application, place all of your variables before the invocation of t
 PG_DB_HOST=127.0.0.1 PG_DB_USER=metrics PG_DB_PASS=hunter2 PG_DB_NAME=lemmy INFLUX_HOST=127.0.0.1 INFLUX_PORT=8086 INFLUX_NAME=metrics ./lemmy-data-exporter
 ```
 
+**NOTE**: If you have any special characters in the values you're passing to these variables (such as `PG_DB_PASS`) then wrap the variable in single-quotes `'` to prevent bash from expanding it. Example:
+
+```bash
+PG_DB_HOST=127.0.0.1 PG_DB_USER=metrics PG_DB_PASS='My@Secure!12978Password' PG_DB_NAME=lemmy INFLUX_HOST=127.0.0.1 INFLUX_PORT=8086 INFLUX_NAME=metrics ./lemmy-data-exporter
+```
+
 (Permission denied? Make the binary executable first: `chmod +x lemmy-data-exporter`)
 
 If it worked, you'll get some output from the program, and then it'll exit as it only runs the operation once. We'll fix that in a moment!
@@ -179,6 +185,7 @@ I'd imagine that you're not going to want to sit there and continuously run that
 - `config`
     - This is the file that holds all of your environmental variables, so that the `ExecStart` line isn't hideous. You need to edit these example values to the ones you used earlier during the test run.
     - Make the `/etc/lemmy-data-exporter` directory, then copy this file there. If you want the directory/name changed, edit the `EnvironmentFile` stanza in `lemmy-data-exporter.service` to match.
+    - Reminder: Any special-character values passed these variables may require a single-quote ('), systemd in theory shouldn't require this - but if you run into any issues with running the service, try wrapping the values in single quotes.
 
 Now, once those are all copied over, run `systemctl daemon-reload` in order to make systemd aware of the new units. You can then give it a try by running `systemctl start lemmy-data-exporter.service`, if it returns without an error then it most likely worked but you can verify by running `systemctl status lemmy-data-exporter.service` (it is normal for the "Active" state to say "inactive (dead)" since its being triggered by the timer, and isn't a long-living process). Assuming that went well, enable the timer (so that it runs automatically) with `systemctl enable lemmy-data-exporter.timer`.
 
