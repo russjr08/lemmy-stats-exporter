@@ -25,8 +25,7 @@ Please utilize this tool responsibly, and carefully. I'm sure I do not need to g
 To utilize this project as intended, you'll need the following:
 
 - Administrative access to the system running your Lemmy instance (or at least, its PostgreSQL database)
-- An InfluxDB server (its very lightweight, I promise!)
-    - My instance uses version 1.8.9 whereas 2.x is the newest version, from my understanding v1.8.x has forward-compatibility with 2.x's APIs which *should* mean that the Rust library I'm using for this project should work on both versions, but if it doesn't, I apologize! Let me know and I can try to see what can be done to remedy that.
+- An InfluxDB server (its very lightweight, I promise!) running the v1 branch (v2's API has diverged too much to support it at this time)
 - The following libraries should be present in your system's `/usr/lib` folder:
     - `libgcc_s.so.1`
     - `libm.so.6`
