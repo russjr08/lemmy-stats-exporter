@@ -128,7 +128,9 @@ The environmental variables are as follows:
 | INFLUX_NAME    | The name of the Influx database you created earlier            | metrics   |
 | SLEEP_DURATION | (Optional) The amount of time in seconds to sleep between runs | 60        |
 
-At the current moment, all of these variables are required - if you miss one, the application will scream at you and walk out the door, leaving an error message in its wake.
+At the current moment, all of these variables (except `SLEEP_DURATION`) are required - if you miss one, the application will scream at you and walk out the door, leaving an error message in its wake.
+
+_About "SLEEP_DURATION": This flag sets the amount of time to sleep between runs. It's not required, and setting it to zero or leaving it out will keep the default behavior - which is quitting upon completion._
 
 To start the application, place all of your variables before the invocation of the command, example:
 
