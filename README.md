@@ -117,15 +117,16 @@ It took a minute to get here, apologies! I try to be incredibly thorough, while 
 
 The environmental variables are as follows:
 
-| Variable    | Description                                                    | Example   |
-|-------------|----------------------------------------------------------------|-----------|
-| PG_DB_HOST  | The IP/hostname of your Lemmy postgres db                      | 127.0.0.1 |
-| PG_DB_USER  | The name of the user you created for this tool                 | metrics   |
-| PG_DB_PASS  | The password of the user you created for this tool             | hunter2   |
-| PG_DB_NAME  | The name of your lemmy database                                | lemmy     |
-| INFLUX_HOST | The IP/hostname of your Influx database                        | 127.0.0.1 |
-| INFLUX_PORT | The port number of the HTTP API for Influx (its probably 8086) | 8086      |
-| INFLUX_NAME | The name of the Influx database you created earlier            | metrics   |
+| Variable       | Description                                                    | Example   |
+|----------------|----------------------------------------------------------------|-----------|
+| PG_DB_HOST     | The IP/hostname of your Lemmy postgres db                      | 127.0.0.1 |
+| PG_DB_USER     | The name of the user you created for this tool                 | metrics   |
+| PG_DB_PASS     | The password of the user you created for this tool             | hunter2   |
+| PG_DB_NAME     | The name of your lemmy database                                | lemmy     |
+| INFLUX_HOST    | The IP/hostname of your Influx database                        | 127.0.0.1 |
+| INFLUX_PORT    | The port number of the HTTP API for Influx (its probably 8086) | 8086      |
+| INFLUX_NAME    | The name of the Influx database you created earlier            | metrics   |
+| SLEEP_DURATION | (Optional) The amount of time in seconds to sleep between runs | 60        |
 
 At the current moment, all of these variables are required - if you miss one, the application will scream at you and walk out the door, leaving an error message in its wake.
 
@@ -171,6 +172,13 @@ Wrote to Influx:
 Done pushing Influx stats
 Pushed stats to influx
 ```
+
+### Running via Docker [Compose]
+
+There is an included `docker-compose.yml` file for your convenience, which has a ton of comments on how to use lemmy-stats-exporter
+as a dockerized application if that is your preference. Please be sure to read the comments there in full before blindly deploying it.
+
+Of course, you can run this without compose by either building the included `Dockerfile` locally, or pulling the [russjr08/lemmy-stats-exporter](https://hub.docker.com/repository/docker/russjr08/lemmy-stats-exporter/general) image on DockerHub. If you do this, I assume you are familiar with running containersoutside of docker-compose, but I'd still have a look at the comments in `docker-compose.yml` just to be aware of any potential caveats.
 
 ### Automation
 

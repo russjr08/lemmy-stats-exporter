@@ -1,0 +1,74 @@
+# A simple docker compose stack for lemmy-stats-exporter + influxdb v1
+# NOTE: that this doesn't contain any sort of fancy "wait-for-it" sort of
+# wrapper to ensure that dependencies are up and running beforehand.
+#
+# You should be careful with this, as if you run this before your Lemmy database is online
+# (or it goes offline), then lemmy-stats-exporter will assume all zeros for the current stats
+# and may make your dashboard look a bit funny. 
+#
+# I'm still trying to improve my "Rust-fu" so to speak, but if you have a good way of fixing this
+# on either the Docker side or the Rust/code side of things, I'd very much appreciate your contribution!
+#
+# This compose file contains a lot of comments to act as instructions, please don't hesitate to remove
+# all the comments once you've got a hold of what is going on here of course.
+#
+# Feel free to either integrate this directly into your Lemmy stack, or also feel free to add in
+# Grafana if you don't already have an existing instance. If you do integrate Grafana into here
+# or you already have a Grafana container, feel free to remove the port binding below, but ensure
+# that there is a proper link between wherever you're running Grafana.
+#
+# On that note, do not use the cloud-hosted Grafana service, as it won't be able to connect to Influx
+# without exposing it to the internet, which due to the lack of authentication can end pretty badly.
+
+services:
+  influx:
+    container_name: influx
+    image: influxdb:1.8.10 # Do not attempt to use InfluxDB v2 as it is incompatible.
+    ports:
+      - "127.0.0.1:8086:8086" # This needs to be exposed for Grafana to connect
+      # Unless your Grafana is also in a container, then join it to the same network
+      # and switch the INFLUX_HOST below to match the container name of grafana.
+      # If you keep this, absolutely do NOT remove the localhost binding as InfluxDB
+      # by default doesn't have authentication, and lemmy-stats-exporter expects it to
+      # be this way currently.
+    volumes:
+      - ./data:/var/lib/influxdb/data:rw # Do not change anything after the first `:`
+      #- influxdb-storage:/var/lib/influxdb/data:rw # See the note at the bottom before uncommenting
+    environment:
+      - INFLUXDB_DB=lemmy
+      - INFLUXD_REPORTING_DISABLED=true # You may remove this line if you wish to re-enable telemtry
+      # Note that despite the above, influx claims to still be sending usage data on startup to usage.influxdata.com
+    
+  app: # lemmy-stats-exporter, known below as "LSE"
+    image: docker.io/russjr08/lemmy-stats-exporter # Comment-out if building the container yourself as below
+    #build: . # You can uncomment to build this container, just make sure you have the Dockerfile in this folder
+    links:
+      - "influx" # Make sure this matches the container name for influx above!
+    environment:
+      # The below variable controls how long LSE will wait after a run
+      # in order to re-run (in seconds). Remove the variable, or set to 0 if you want
+      # to manage this outside of the container (such as via cron, systemd timer, etc).
+      # Be careful with that solution, as you probably want to ensure that influxdb
+      # stays running.
+      - SLEEP_DURATION=60
+      - PG_DB_HOST=db        # Should match the name of your Lemmy postgres container
+      - PG_DB_NAME=lemmy     # The name of your lemmy database in Postgres
+      - PG_DB_USER=user      # The name of a READ-ONLY user in Postgres that has access to Lemmy's db (see the README.md)
+      - PG_DB_PASS=examplepw # The password of said user mentioned on the above line
+      - INFLUX_HOST=influx   # Should match the container name above
+      - INFLUX_NAME=lemmy    # This should match the INFLUXDB_DB variable above
+      - INFLUX_PORT=8086     # Leave as the default unless you know what you're doing!
+
+networks:
+  lemmynet: # See the instructions four lines below this
+    name: your-lemmy-network
+    external: true
+
+# For the above, in the docker-compose.yml file for your Lemmy stack,
+# you should have a network with this same name defined there without the 'external: true' bit
+# then for the PG_DB_HOST use the name of your postgres container from your Lemmy stack.
+
+#volumes:
+  #influxdb-storage:
+# If you want docker to manage the influx storage then uncomment the above two lines
+# and switch the `./data` on line 35 to match the name (do not include `./` for a docker-volume)

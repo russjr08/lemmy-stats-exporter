@@ -3,10 +3,13 @@ use influxdb::InfluxDbWriteable;
 
 use chrono::{DateTime, Utc};
 
+use std::{thread, time};
+
 use tokio_postgres::NoTls;
 
 
 struct Config {
+    sleep_duration: u64,
     pg_database_host: String,
     pg_database_user: String,
     pg_database_pass: String,
@@ -232,6 +235,10 @@ async fn push_lemmy_stats(stats: &LemmyStats, config: &Config) -> Result<(), inf
 }
 
 fn build_and_verify_config() -> Config {
+    let sleep_duration   = match std::env::var("SLEEP_DURATION") {
+                                Ok(var) => var,
+                                Err(_) => "NONE".to_string()
+                           };
     let pg_database_host = std::env::var("PG_DB_HOST").expect("A PG_DB_HOST env var is required!");
     let pg_database_user = std::env::var("PG_DB_USER").expect("A PG_DB_USER env var is required!"); 
     let pg_database_name = std::env::var("PG_DB_NAME").expect("A PG_DB_NAME env var is required!");
@@ -239,7 +246,18 @@ fn build_and_verify_config() -> Config {
     let influx_host      = std::env::var("INFLUX_HOST").expect("An INFLUX_HOST env var is required!");
     let influx_name      = std::env::var("INFLUX_NAME").expect("An INFLUX_NAME env var is required!");
     let influx_port      = std::env::var("INFLUX_PORT").expect("An INFLUX_PORT env var is required!");
+
+    let mut parsed_sleep_duration: u64 = 0;
+
+    if sleep_duration.eq_ignore_ascii_case("NONE") {
+        println!("SLEEP_DURATION was not defined, you'll need to manually invoke this program whenever you'd like to re-run it.");
+    } else {
+        parsed_sleep_duration = sleep_duration.parse::<u64>().expect("SLEEP_DURATION is not a valid number!");
+    }
+
+
     Config {
+        sleep_duration: parsed_sleep_duration,
         pg_database_host,
         pg_database_user,
         pg_database_name,
@@ -256,17 +274,30 @@ async fn main() -> Result<(), tokio_postgres::Error> {
     let config = build_and_verify_config();
     println!("Connecting to Postgres...");
 
-    let stats = collect_lemmy_stats(&config).await;
+    loop {
 
-    match stats {
-        Ok(stats) => { 
-            println!("Found stats: {:#?}", stats);
-            match push_lemmy_stats(&stats, &config).await {
-                Err(_) => eprintln!("Failed to push to influx!"),
-                Ok(_) => { println!("Pushed stats to influx") }
-            }
-        },
-        Err(err) => println!("Failed to grab Lemmy stats from postgres: {}", err)
+        println!("Collecting stats...");
+
+        let stats = collect_lemmy_stats(&config).await;
+
+        match stats {
+            Ok(stats) => { 
+                println!("Found stats: {:#?}", stats);
+                match push_lemmy_stats(&stats, &config).await {
+                    Err(_) => eprintln!("Failed to push to influx!"),
+                    Ok(_) => { println!("Pushed stats to influx") }
+                }
+            },
+            Err(err) => println!("Failed to grab Lemmy stats from postgres: {}", err)
+        }
+
+        if config.sleep_duration == 0 {
+            println!("Exiting, as SLEEP_DURATION is not set, or is the default '0' value.");
+            break;
+        }
+
+        println!("Waiting...");
+        thread::sleep(time::Duration::from_secs(config.sleep_duration));
     }
 
     Ok(())
